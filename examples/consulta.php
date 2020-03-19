@@ -17,5 +17,5 @@ try {
     echo $resp;
 
 } catch (\Exception $e) {
-    echo $e->getMessge();
+    echo $e->getMessage();
 }
