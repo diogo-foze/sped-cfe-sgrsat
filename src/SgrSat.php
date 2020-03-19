@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace NFePHP\SgrSat;
 
 /**
@@ -9,22 +11,28 @@ namespace NFePHP\SgrSat;
 class SgrSat
 {
 
+    /**
+     * @var string
+     */
     public static $url = "https://wssatsp.fazenda.sp.gov.br/CfeConsultarLotes/CfeConsultarLotes.asmx";
 
     /**
      * Recebe parametros e faz a consula
      *
-     * @param \stdClass $param
+     * @param int $serie
+     * @param string $inicial
+     * @param string $final
+     * @param string $chave
      * @return string
      */
-    public static function consulta($serie, $inicial, $final, $chave)
+    public static function consulta(int $serie, string $inicial, string $final, string $chave): string
     {
         $dtini = new \DateTime($inicial);
         $dtfim = new \DateTime($final);
-        $ini = $dtini->format('dmY') . "000000";
-        $fim = $dtfim->format('dmY') . '595900';
-        $satserie = str_pad($serie, 9, '0', STR_PAD_LEFT);
-                
+        $ini = (string) $dtini->format('dmY') . "000000";
+        $fim = (string) $dtfim->format('dmY') . '595900';
+        $satserie = (string) str_pad($serie, 9, '0', STR_PAD_LEFT);
+
         $message = "<?xml version='1.0' encoding='UTF-8'?>"
             . "<consLote xmlns=\"http://www.fazenda.sp.gov.br/sat\" versao=\"0.06\">"
             . "<nserieSAT>{$satserie}</nserieSAT>"
@@ -49,7 +57,7 @@ class SgrSat
             . "</cfec:CfeConsultarLotes>"
             . "</soapenv:Body>"
             . "</soapenv:Envelope>";
-                   
+
         return self::send($envelope);
     }
 
@@ -59,7 +67,7 @@ class SgrSat
      * @param string $envelope
      * @return string
      */
-    protected static function send($envelope)
+    protected static function send(string $envelope): string
     {
         $msgSize = strlen($envelope);
         $header = [
@@ -68,7 +76,7 @@ class SgrSat
             "SOAPAction: \"http://www.fazenda.sp.gov.br/sat/wsdl/CfeConsultar\"",
             "Content-length: $msgSize"
         ];
-        
+
         $oCurl = curl_init();
         curl_setopt($oCurl, CURLOPT_URL, self::$url);
         curl_setopt($oCurl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
@@ -89,9 +97,9 @@ class SgrSat
             $soapinfo = $ainfo;
         }
         $headsize = curl_getinfo($oCurl, CURLINFO_HEADER_SIZE);
-        $httpcode = curl_getinfo($oCurl, CURLINFO_HTTP_CODE);
+        //$httpcode = curl_getinfo($oCurl, CURLINFO_HTTP_CODE);
         curl_close($oCurl);
-        $responseHead = trim(substr($response, 0, $headsize));
+        //$responseHead = trim(substr($response, 0, $headsize));
         $responseBody = trim(substr($response, $headsize));
         if (!empty($oaperror)) {
             throw new \Exception("Falha de comunicação: " . $soaperror_code . ' - ' . $soaperror, $soaperror_code);
